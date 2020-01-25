@@ -5,6 +5,7 @@ import { UserController } from './controllers/user/user.controller';
 import {UserService } from './services/user/user.service';
 import { UserActivityService } from './services/user-activity/user-activity.service';
 import { UserRepository } from './repositories/repository/user-repository';
+import { UserActivityRepository } from './repositories/user-activity-repository/user-activity-repository';
 import { AuthController } from './controllers/auth/auth.controller';
 import { AuthService } from './services/auth/auth.service';
 import { secretKey, JwtStrategy } from './services/auth/jwt.strategy';
@@ -36,6 +37,6 @@ import { UserActivityController } from './controllers/user-activity/user-activit
       }),
   ],
   controllers: [AppController, UserController, AuthController, UserActivityController],
-  providers: [AppService, UserService, AuthService, UserRepository, JwtStrategy, UserActivityService],
+  providers: [AppService, UserService, AuthService, UserRepository, UserActivityRepository, JwtStrategy, UserActivityService],
 })
 export class AppModule {}

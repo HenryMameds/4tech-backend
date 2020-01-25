@@ -1,4 +1,4 @@
-import { Controller, UseGuards, Post, UseInterceptors, UploadedFile, Body } from '@nestjs/common';
+import { Controller, UseGuards, Post, UseInterceptors, UploadedFile, Body, Get, Param } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { diskStorage } from 'multer';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -10,6 +10,12 @@ export class UserActivityController {
   constructor(private readonly userActivityService: UserActivityService){
 
   }
+
+  @Get(':index')
+  getRecentImagens(
+    @Param('index') index : string){
+      return this.userActivityService.getRecentUploads(index);
+    }
 
   @Post('upload')
   @UseInterceptors(
@@ -24,6 +30,6 @@ export class UserActivityController {
     @Body('userId') userId: string,
     @Body('description') description: string,
   ) {
-    return this.userActivityService.uploadImage(userId, file.filename, description);
+    return this.userActivityService.uploadImage(userId, file.originalname, description);
   }
 }

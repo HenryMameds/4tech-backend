@@ -14,7 +14,13 @@ export class UserRepository {
     @InjectModel('User')private readonly userCollection: Model<User>){
   }
 
- async getUsers(): Promise<User[]>{
+  async getById(id: string): Promise<User> {
+    return await this.userCollection
+    .findOne({ _id: id})
+    .lean();
+  }
+
+  async getUsers(): Promise<User[]>{
     // return this.db;
     return await this.userCollection
     .find()
@@ -24,5 +30,10 @@ export class UserRepository {
   async createUser(newUser: UserViewModel) {
     const user = this.userCollection(newUser);
     return await user.save();
+  }
+
+  async deleteUser(id: String): Promise<User> {
+      return await this.userCollection
+      .deleteOne({_id: id})
   }
 }
