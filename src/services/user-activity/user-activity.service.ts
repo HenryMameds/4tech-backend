@@ -3,12 +3,17 @@ import { UserRepository } from 'src/repositories/repository/user-repository';
 import { UserActivityDto } from 'src/domain/dto/user-activity.dto';
 import { UserActivityCommentDto } from 'src/domain/dto/user-activity-comment.dto';
 import { UserActivityRepository } from 'src/repositories/user-activity-repository/user-activity-repository';
+import { UserActivity } from 'src/domain/schemas/user-activity.schema';
+import { LikeOrDislikeViewModel } from 'src/domain/like-or-dislike.viewmodel';
+import { WebsocketGateway } from 'src/websocket/websocket.gateway'
+import { readFileSync } from 'fs';
 
 @Injectable()
 export class UserActivityService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly userActivityRepository: UserActivityRepository){
+    private readonly userActivityRepository: UserActivityRepository,
+    private readonly websocketGateway: WebsocketGateway) {
   }
   async getRecentUploads(index: string){
 
@@ -17,7 +22,10 @@ export class UserActivityService {
       throw new BadRequestException('Invalid Index')
     }
 
-    return await this.userActivityRepository.getPaged(indexAsNumber)
+    const recentUploads = await this.userActivityRepository.getPaged(indexAsNumber);
+
+    return this.convertImagesToBase64(recentUploads)
+    //await this.userActivityRepository.getPaged(indexAsNumber)
   }
 
   async uploadImage(userId: string, filename: string, description: string){
@@ -36,6 +44,53 @@ export class UserActivityService {
       ));
     }
 
-    return await this.userActivityRepository.create(uploadImageObj)
+    const createdUserActivity = await this.userActivityRepository.create(uploadImageObj);
+
+    return this.convertImagesToBase64ForOneFile(createdUserActivity)
+
+    // return await this.userActivityRepository.create(uploadImageObj)
+  }
+
+  convertImagesToBase64(userActivities: UserActivity[]) {
+    return Promise.all(
+      userActivities.map(userActivity => {
+        return {
+          ...userActivity,
+          imgEncoded: readFileSync('../images/' + userActivity.filename, 'base64'),
+        };
+      }),
+    );
+  }
+
+  async likeOrDislikeUserActivity(likeOrDislikeViewModel: LikeOrDislikeViewModel){
+    const userActivity = await this.userActivityRepository.getById(likeOrDislikeViewModel.userActivityId);
+    if(!userActivity) {
+      throw new BadRequestException('An User Activity with the given id does not exist')
+    }
+
+    const user = await this.userRepository.getById(likeOrDislikeViewModel.userId);
+    if(!user){
+      throw new BadRequestException('An User with the given id does not exist')
+    }
+
+    if(userActivity.likes.includes(user._id.toString())){
+      userActivity.likes = userActivity.likes.filter(x => x !== user._id.toString());
+    } else {
+      userActivity.likes.push(user._id.toString());
+    }
+
+    const updatedUserActivity = await this.userActivityRepository.update(userActivity);
+    this.websocketGateway.notifyOnLike(userActivity._id, userActivity.userId);
+
+    return updatedUserActivity
+
+
+  }
+
+  convertImagesToBase64ForOneFile(userActivity: UserActivity) {
+    return {
+      ...userActivity,
+      imgEncoded: readFileSync('../images/' + userActivity.filename, 'base64'),
+    };
   }
 }

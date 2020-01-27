@@ -14,6 +14,7 @@ import { MongooseModule } from  '@nestjs/mongoose'
 import { UserSchema } from './domain/schemas/user.schema'
 import { UserActivitySchema } from './domain/schemas/user-activity.schema'
 import { UserActivityController } from './controllers/user-activity/user-activity.controller';
+import { WebsocketGateway } from 'src/websocket/websocket.gateway';
 
 @Module({
   imports: [
@@ -37,6 +38,6 @@ import { UserActivityController } from './controllers/user-activity/user-activit
       }),
   ],
   controllers: [AppController, UserController, AuthController, UserActivityController],
-  providers: [AppService, UserService, AuthService, UserRepository, UserActivityRepository, JwtStrategy, UserActivityService],
+  providers: [AppService, UserService, AuthService, UserRepository, UserActivityRepository, JwtStrategy, UserActivityService, WebsocketGateway],
 })
 export class AppModule {}

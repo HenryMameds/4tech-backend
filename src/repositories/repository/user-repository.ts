@@ -14,6 +14,14 @@ export class UserRepository {
     @InjectModel('User')private readonly userCollection: Model<User>){
   }
 
+  async GetByCredentials(userLoginFromViewModel: string, passwordFromViewModel: string ) {
+    return await this.userCollection
+    .findOne({ userLogin: userLoginFromViewModel,
+               password: passwordFromViewModel
+            })
+    .lean();
+  }
+
   async getById(id: string): Promise<User> {
     return await this.userCollection
     .findOne({ _id: id})
@@ -24,6 +32,7 @@ export class UserRepository {
     // return this.db;
     return await this.userCollection
     .find()
+    .select({ __v: false, password: false })
     .lean();
   }
 
